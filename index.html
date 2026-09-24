@@ -26,7 +26,7 @@ button.primary,.nav button.active{background:var(--accent);color:white;border:0}
 .daynum{font-weight:700;font-size:13px;margin-bottom:5px}.calevent{font-size:11px;padding:4px 5px;border-radius:7px;margin:3px 0;background:#eee;line-height:1.2}.calevent.pay{background:#f7e5e2}.calevent.get{background:#e2f0e8}.calevent.rec{background:#eee5f2}
 .rec-summary{font-size:13px;color:var(--muted);margin:0 0 12px}
 dialog{border:0;border-radius:18px;padding:0;max-width:620px;width:calc(100% - 28px);box-shadow:0 20px 70px #0004}dialog::backdrop{background:#0006}
-form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{font-size:13px;color:var(--muted)}input,select,textarea{width:100%;margin-top:5px;padding:11px;border:1px solid var(--line);border-radius:10px;background:white;font:inherit;color:var(--ink)}textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}.formactions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.formactions button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:white}
+form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{font-size:13px;color:var(--muted)}input,select,textarea{width:100%;margin-top:5px;padding:11px;border:1px solid var(--line);border-radius:10px;background:white;font:inherit;color:var(--ink)}textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}.formactions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.formactions button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:white}.formactions .savebtn{background:#2563eb!important;color:white!important;border-color:#2563eb!important;font-weight:700}.formactions .cancelbtn{color:#c62828!important;font-weight:600}
 .fab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:white;font-size:32px;box-shadow:0 7px 25px #0003;cursor:pointer}.note{font-size:12px;color:var(--muted);margin-top:12px}
 @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:1fr}.amount{text-align:left}.day{min-height:90px;padding:4px}.calevent{font-size:9px}.weekday{font-size:10px;padding:6px 2px}}
 </style></head>
@@ -36,9 +36,9 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 <section class="summary">
 <div class="card"><small>Noch zu zahlen</small><strong id="sumPay">0 €</strong></div>
 <div class="card"><small>Noch zu bekommen</small><strong class="good" id="sumGet">0 €</strong></div>
-<div class="card"><small>Überfällig</small><strong class="bad" id="sumLate">0</strong></div>
-<div class="card"><small>In 2 Tagen fällig</small><strong class="bad" id="sumTwo">0</strong></div>
-<div class="card"><small>In 7 Tagen fällig</small><strong id="sumSoon">0</strong></div>
+<div class="card"><small>Überfällig</small><strong class="bad" id="sumLate">0 €</strong></div>
+<div class="card"><small>In 2 Tagen fällig</small><strong class="bad" id="sumTwo">0 €</strong></div>
+<div class="card"><small>In 7 Tagen fällig</small><strong id="sumSoon">0 €</strong></div>
 </section>
 
 <div class="nav">
@@ -76,7 +76,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 <label class="full">Person / Firma<input id="party" required></label><label>Betrag (€)<input id="amount" type="number" min="0" step=".01" required></label>
 <label>Fällig am<input id="due" type="date" required></label><label>Rechnungs-/Entstehungsdatum<input id="created" type="date"></label>
 <label>Status<select id="status"><option value="open">Offen</option><option value="done">Erledigt</option></select></label>
-<label class="full">Grund / Notiz<textarea id="note"></textarea></label></div><div class="formactions"><button type="button" onclick="entryDlg.close()">Abbrechen</button><button class="primary">Speichern</button></div></form></dialog>
+<label class="full">Grund / Notiz<textarea id="note"></textarea></label></div><div class="formactions"><button type="button" class="cancelbtn" onclick="entryDlg.close()">Abbrechen</button><button class="savebtn">Speichern</button></div></form></dialog>
 
 <dialog id="recDlg"><form id="recForm"><h2 id="recTitle">Wiederkehrende Zahlung</h2><input type="hidden" id="rid"><div class="grid">
 <label>Bereich<select id="rarea"><option>Privat</option><option>Gewerblich</option></select></label>
@@ -85,7 +85,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 <label>Betrag (€)<input id="ramount" type="number" min="0" step=".01" required></label>
 <label>Ab Monat<input id="rstart" type="month"></label>
 <label class="full">Notiz<textarea id="rnote" placeholder="z. B. Versicherung, Kreditrate, Abo …"></textarea></label>
-</div><div class="formactions"><button type="button" onclick="recDlg.close()">Abbrechen</button><button class="primary">Speichern</button></div></form></dialog>
+</div><div class="formactions"><button type="button" class="cancelbtn" onclick="recDlg.close()">Abbrechen</button><button class="savebtn">Speichern</button></div></form></dialog>
 
 
 <script>
@@ -104,9 +104,9 @@ function renderSummary(){
  let open=store.entries.filter(x=>x.status!=="done");
  $("sumPay").textContent=money(open.filter(x=>x.type==="pay").reduce((s,x)=>s+x.amount,0));
  $("sumGet").textContent=money(open.filter(x=>x.type==="get").reduce((s,x)=>s+x.amount,0));
- $("sumLate").textContent=open.filter(x=>statusOf(x)==="late").length;
- $("sumTwo").textContent=open.filter(x=>daysUntil(x.due)===2).length;
- $("sumSoon").textContent=open.filter(x=>{let d=daysUntil(x.due);return d>=0&&d<=7}).length;
+ $("sumLate").textContent=money(open.filter(x=>daysUntil(x.due)<0 && x.type==="pay").reduce((s,x)=>s+x.amount,0));
+ $("sumTwo").textContent=money(open.filter(x=>daysUntil(x.due)===2 && x.type==="pay").reduce((s,x)=>s+x.amount,0));
+ $("sumSoon").textContent=money(open.filter(x=>{let d=daysUntil(x.due);return x.type==="pay"&&d>=0&&d<=7}).reduce((s,x)=>s+x.amount,0));
  renderAttention();
 }
 function attentionRow(x,label,cls){
