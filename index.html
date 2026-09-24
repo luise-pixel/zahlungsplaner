@@ -26,19 +26,19 @@ button.primary,.nav button.active{background:var(--accent);color:white;border:0}
 .daynum{font-weight:700;font-size:13px;margin-bottom:5px}.calevent{font-size:11px;padding:4px 5px;border-radius:7px;margin:3px 0;background:#eee;line-height:1.2}.calevent.pay{background:#f7e5e2}.calevent.get{background:#e2f0e8}.calevent.rec{background:#eee5f2}
 .rec-summary{font-size:13px;color:var(--muted);margin:0 0 12px}
 dialog{border:0;border-radius:18px;padding:0;max-width:620px;width:calc(100% - 28px);box-shadow:0 20px 70px #0004}dialog::backdrop{background:#0006}
-form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{font-size:13px;color:var(--muted)}input,select,textarea{width:100%;margin-top:5px;padding:11px;border:1px solid var(--line);border-radius:10px;background:white;font:inherit;color:var(--ink)}textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}.formactions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.formactions button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:white}.formactions .savebtn{background:#2563eb!important;color:white!important;border-color:#2563eb!important;font-weight:700}.formactions .cancelbtn{color:#c62828!important;font-weight:600}
+form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{font-size:13px;color:var(--muted)}input,select,textarea{width:100%;margin-top:5px;padding:11px;border:1px solid var(--line);border-radius:10px;background:white;font:inherit;color:var(--ink)}textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}.formactions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.formactions button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:white}.formactions .savebtn{background:white!important;color:#2563eb!important;border-color:#2563eb!important;font-weight:700}.formactions .cancelbtn{color:#c62828!important;font-weight:600}
 .fab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:white;font-size:32px;box-shadow:0 7px 25px #0003;cursor:pointer}.note{font-size:12px;color:var(--muted);margin-top:12px}
 @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:1fr}.amount{text-align:left}.day{min-height:90px;padding:4px}.calevent{font-size:9px}.weekday{font-size:10px;padding:6px 2px}}
-</style></head>
+.summarybtn{font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}.summarybtn:hover{border-color:var(--accent);transform:translateY(-1px)}.cardhint{display:block;margin-top:8px;font-size:11px;color:var(--muted)}.summaryrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.summaryrow:first-child{border-top:0}.summaryrow h3{margin:0 0 4px;font-size:15px}.summaryrow .amount{white-space:nowrap}.summaryactions{display:flex;gap:6px;margin-top:8px}.summaryactions button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:white;cursor:pointer}.summaryactions .finish{color:var(--good);font-weight:700}.summaryactions .edit{color:#2563eb;font-weight:700}.summarytotal{padding:10px 0 0;border-top:2px solid var(--line);margin-top:8px;font-weight:750;text-align:right}</style></head>
 <body>
 <header><h1>Mein Zahlungsplaner</h1><p>Rechnungen, Forderungen und monatliche Zahlungen im Blick behalten.</p></header>
 <main>
 <section class="summary">
 <div class="card"><small>Noch zu zahlen</small><strong id="sumPay">0 €</strong></div>
 <div class="card"><small>Noch zu bekommen</small><strong class="good" id="sumGet">0 €</strong></div>
-<div class="card"><small>Überfällig</small><strong class="bad" id="sumLate">0 €</strong></div>
-<div class="card"><small>In 2 Tagen fällig</small><strong class="bad" id="sumTwo">0 €</strong></div>
-<div class="card"><small>In 7 Tagen fällig</small><strong id="sumSoon">0 €</strong></div>
+<button class="card summarybtn" onclick="openSummary('late')"><small>Überfällig</small><strong class="bad" id="sumLate">0 €</strong><span class="cardhint">Details anzeigen ›</span></button>
+<button class="card summarybtn" onclick="openSummary('two')"><small>In 2 Tagen fällig</small><strong class="bad" id="sumTwo">0 €</strong><span class="cardhint">Details anzeigen ›</span></button>
+<button class="card summarybtn" onclick="openSummary('seven')"><small>In 7 Tagen fällig</small><strong id="sumSoon">0 €</strong><span class="cardhint">Details anzeigen ›</span></button>
 </section>
 
 <div class="nav">
@@ -69,6 +69,17 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 <p class="note">Die Daten werden lokal in diesem Browser gespeichert. Beim Öffnen prüft die App automatisch auf überfällige und bald fällige Einträge. Bitte regelmäßig ein Backup exportieren.</p>
 </main>
 <button class="fab" onclick="openEntryForm()">+</button>
+
+
+<dialog id="summaryDlg">
+<div style="padding:20px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+<h2 id="summaryTitle" style="margin:0"></h2>
+<button onclick="summaryDlg.close()" style="border:0;background:transparent;font-size:25px;cursor:pointer;color:var(--muted)">×</button>
+</div>
+<div id="summaryContent" style="margin-top:12px"></div>
+</div>
+</dialog>
 
 <dialog id="entryDlg"><form id="entryForm"><h2 id="entryTitle">Neuer Eintrag</h2><input type="hidden" id="eid"><div class="grid">
 <label>Art<select id="type"><option value="pay">Ich muss zahlen</option><option value="get">Ich bekomme Geld</option></select></label>
@@ -131,6 +142,32 @@ function renderAll(){renderSummary();renderEntries();renderRecurring();renderCal
 function showView(btn){document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));$(btn.dataset.view).classList.add("active")}
 function setFilter(btn){document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");filter=btn.dataset.filter;renderEntries()}
 function moveMonth(n){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+n,1);renderCalendar()}
+
+function summaryEntries(kind){
+ let open=store.entries.filter(x=>x.status!=="done"&&x.type==="pay");
+ if(kind==="late")return open.filter(x=>daysUntil(x.due)<0).sort((a,b)=>a.due.localeCompare(b.due));
+ if(kind==="two")return open.filter(x=>daysUntil(x.due)===2).sort((a,b)=>a.due.localeCompare(b.due));
+ return open.filter(x=>{let d=daysUntil(x.due);return d>=0&&d<=7}).sort((a,b)=>a.due.localeCompare(b.due));
+}
+function openSummary(kind){
+ const titles={late:"Überfällige Rechnungen",two:"In 2 Tagen fällig",seven:"In 7 Tagen fällig"};
+ $("summaryTitle").textContent=titles[kind];
+ const arr=summaryEntries(kind);
+ if(!arr.length){$("summaryContent").innerHTML=`<div class="empty">Keine Rechnungen in dieser Übersicht.</div>`}
+ else{
+   $("summaryContent").innerHTML=arr.map(x=>`<div class="summaryrow"><div><h3>${esc(x.party)}</h3><div class="meta">Fällig: ${fmt(x.due)}${x.note?" · "+esc(x.note):""}</div><div class="summaryactions"><button class="finish" onclick="finishFromSummary('${x.id}','${kind}')">✓ Erledigt</button><button class="edit" onclick="editFromSummary('${x.id}')">Bearbeiten</button></div></div><div class="amount">${money(x.amount)}</div></div>`).join("")+`<div class="summarytotal">Summe: ${money(arr.reduce((s,x)=>s+x.amount,0))}</div>`;
+ }
+ summaryDlg.showModal();
+}
+function finishFromSummary(id,kind){
+ let x=store.entries.find(v=>v.id===id);if(!x)return;x.status="done";save();
+ if(summaryDlg.open)openSummary(kind);
+}
+function editFromSummary(id){
+ summaryDlg.close();
+ editEntry(id);
+}
+
 function openEntryForm(){entryForm.reset();$("eid").value="";$("created").value=todayStr();$("entryTitle").textContent="Neuer Eintrag";entryDlg.showModal()}
 function editEntry(id){let x=store.entries.find(v=>v.id===id);["type","area","party","amount","due","created","status","note"].forEach(k=>$(k).value=x[k]??"");$("eid").value=id;$("entryTitle").textContent="Eintrag bearbeiten";entryDlg.showModal()}
 entryForm.onsubmit=e=>{e.preventDefault();let id=$("eid").value||crypto.randomUUID(),x={id,type:$("type").value,area:$("area").value,party:$("party").value.trim(),amount:Number($("amount").value),due:$("due").value,created:$("created").value,status:$("status").value,note:$("note").value.trim()},i=store.entries.findIndex(v=>v.id===id);i>=0?store.entries[i]=x:store.entries.push(x);save();entryDlg.close()}
