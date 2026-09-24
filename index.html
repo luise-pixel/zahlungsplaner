@@ -29,7 +29,17 @@ dialog{border:0;border-radius:18px;padding:0;max-width:620px;width:calc(100% - 2
 form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{font-size:13px;color:var(--muted)}input,select,textarea{width:100%;margin-top:5px;padding:11px;border:1px solid var(--line);border-radius:10px;background:white;font:inherit;color:var(--ink)}textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}.formactions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.formactions button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:white}.formactions .savebtn{background:white!important;color:#2563eb!important;border-color:#2563eb!important;font-weight:700}.formactions .cancelbtn{color:#c62828!important;font-weight:600}
 .fab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:white;font-size:32px;box-shadow:0 7px 25px #0003;cursor:pointer}.note{font-size:12px;color:var(--muted);margin-top:12px}
 @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:1fr}.amount{text-align:left}.day{min-height:90px;padding:4px}.calevent{font-size:9px}.weekday{font-size:10px;padding:6px 2px}}
-.summarybtn{font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}.summarybtn:hover{border-color:var(--accent);transform:translateY(-1px)}.cardhint{display:block;margin-top:8px;font-size:11px;color:var(--muted)}.summaryrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.summaryrow:first-child{border-top:0}.summaryrow h3{margin:0 0 4px;font-size:15px}.summaryrow .amount{white-space:nowrap}.summaryactions{display:flex;gap:6px;margin-top:8px}.summaryactions button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:white;cursor:pointer}.summaryactions .finish{color:var(--good);font-weight:700}.summaryactions .edit{color:#2563eb;font-weight:700}.summarytotal{padding:10px 0 0;border-top:2px solid var(--line);margin-top:8px;font-weight:750;text-align:right}</style></head>
+.summarybtn{font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}.summarybtn:hover{border-color:var(--accent);transform:translateY(-1px)}.cardhint{display:block;margin-top:8px;font-size:11px;color:var(--muted)}.summaryrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.summaryrow:first-child{border-top:0}.summaryrow h3{margin:0 0 4px;font-size:15px}.summaryrow .amount{white-space:nowrap}.summaryactions{display:flex;gap:6px;margin-top:8px}.summaryactions button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:white;cursor:pointer}.summaryactions .finish{color:var(--good);font-weight:700}.summaryactions .edit{color:#2563eb;font-weight:700}.summarytotal{padding:10px 0 0;border-top:2px solid var(--line);margin-top:8px;font-weight:750;text-align:right}
+/* V5.5: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
+#entries { display:block !important; width:100%; }
+#entries > .entry {
+  display:flex !important;
+  width:100% !important;
+  box-sizing:border-box;
+  margin:0 0 10px 0 !important;
+}
+
+</style></head>
 <body>
 <header><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><h1>Mein Zahlungsplaner</h1><p>Rechnungen, Forderungen und wiederkehrende Zahlungen im Blick behalten.</p></div><button onclick="refreshApp()" title="Aktualisieren" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--accent);font-size:23px;cursor:pointer">↻</button></div></header>
 <main>
@@ -55,8 +65,8 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 </div>
 <div id="selectTools" style="display:none;margin:0 0 10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff;gap:8px;align-items:center;flex-wrap:wrap">
 <strong id="selectedCount">0 ausgewählt</strong>
-<button onclick="clearSelection()">Auswahl aufheben</button>
-<button onclick="exportSelected()" style="color:#2563eb">Ausgewählte teilen</button>
+<button class="secondary" onclick="clearSelection()">Auswahl aufheben</button>
+<button class="secondary" onclick="showTransferQR()">Auswahl übertragen</button>
 </div>
 <div class="panel"><div class="tabs"><button class="active" data-filter="open" onclick="setFilter(this)">Offen</button><button data-filter="late" onclick="setFilter(this)">Überfällig</button><button data-filter="done" onclick="setFilter(this)">Erledigt</button><button data-filter="all" onclick="setFilter(this)">Alle</button></div><div id="list"></div></div>
 </section>
@@ -202,11 +212,58 @@ function removeRecurring(id){if(confirm("Wiederkehrende Zahlung wirklich lösche
 function selectEntry(id,on){on?selectedIds.add(id):selectedIds.delete(id);updateSelectTools()}
 function clearSelection(){selectedIds.clear();renderEntries();updateSelectTools()}
 function updateSelectTools(){let bar=$("selectTools");if(!bar)return;bar.style.display=selectedIds.size?"flex":"none";$("selectedCount").textContent=`${selectedIds.size} ausgewählt`}
-function exportSelected(){
- let items=store.entries.filter(x=>selectedIds.has(x.id));
+function transferEncode(obj){
+ const bytes=new TextEncoder().encode(JSON.stringify(obj));
+ let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b));
+ return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")
+}
+function transferDecode(str){
+ str=str.replace(/-/g,"+").replace(/_/g,"/");
+ while(str.length%4)str+="=";
+ const bin=atob(str), bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
+ return JSON.parse(new TextDecoder().decode(bytes))
+}
+function showTransferQR(){
+ const items=store.entries.filter(x=>selectedIds.has(x.id));
  if(!items.length)return;
- let blob=new Blob([JSON.stringify({app:"Zahlungsplaner",version:1,kind:"selectedEntries",entries:items},null,2)],{type:"application/json"});
- let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="zahlungsplaner-auswahl.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
+ const payload={app:"Zahlungsplaner",v:1,entries:items};
+ const url=location.origin+location.pathname+"#transfer="+transferEncode(payload);
+ if(url.length>2800){alert("Für einen QR-Code sind zu viele Datensätze ausgewählt. Bitte übertrage sie in kleineren Gruppen.");return}
+ const wrap=$("qrCanvasWrap"); wrap.innerHTML="";
+ if(typeof QRCode==="undefined"){alert("Der QR-Code konnte nicht geladen werden. Bitte die App einmal mit Internetverbindung aktualisieren.");return}
+ QRCode.toCanvas(url,{width:300,margin:2},(err,canvas)=>{
+   if(err){alert("Der QR-Code konnte nicht erstellt werden.");return}
+   wrap.appendChild(canvas);
+   $("qrTransferInfo").textContent=items.length+" Datensätze ausgewählt";
+   $("qrTransferModal").style.display="flex";
+ })
+}
+function closeTransferQR(){$("qrTransferModal").style.display="none"}
+let pendingTransfer=null;
+function checkTransferHash(){
+ if(!location.hash.startsWith("#transfer="))return;
+ try{
+   const payload=transferDecode(location.hash.slice(10));
+   if(!payload||payload.app!=="Zahlungsplaner"||!Array.isArray(payload.entries))return;
+   pendingTransfer=payload.entries;
+   $("transferImportPreview").innerHTML=pendingTransfer.map(x=>`<div style="padding:9px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px"><div><strong>${esc(x.party||"")}</strong><br><small>Fällig: ${fmtDate(x.due)} · ${x.type==="get"?"Bekommen":"Zahlen"}</small></div><strong>${money(+x.amount||0)}</strong></div>`).join("");
+   $("transferImportModal").style.display="flex";
+ }catch(e){}
+}
+function closeTransferImport(){
+ $("transferImportModal").style.display="none"; pendingTransfer=null;
+ history.replaceState(null,"",location.pathname+location.search)
+}
+function confirmTransferImport(){
+ if(!pendingTransfer)return;
+ let added=0, skipped=0;
+ for(const x of pendingTransfer){
+   const duplicate=store.entries.some(y=>y.party===x.party && +y.amount===+x.amount && y.due===x.due && y.type===x.type);
+   if(duplicate){skipped++;continue}
+   store.entries.push({...x,id:crypto.randomUUID()}); added++;
+ }
+ save(); closeTransferImport(); renderAll();
+ alert(`${added} Datensätze importiert${skipped?`, ${skipped} Duplikate übersprungen`:""}.`);
 }
 async function refreshApp(){
  try{if("serviceWorker"in navigator){let r=await navigator.serviceWorker.getRegistration();if(r)await r.update()}}catch(e){}
@@ -243,4 +300,28 @@ async function checkLocalReminders(){
 }
 
 renderAll(); checkLocalReminders(); if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
-</script></body></html>
+window.addEventListener("load",checkTransferHash);
+</script>
+<div id="qrTransferModal" class="modal" style="display:none">
+  <div class="modalbox" style="max-width:460px;text-align:center">
+    <button onclick="closeTransferQR()" style="float:right">×</button>
+    <h2 style="text-align:left">Datensätze übertragen</h2>
+    <p style="text-align:left">Scanne den QR-Code mit dem anderen Gerät. Dort öffnet sich der Zahlungsplaner und zeigt die Datensätze vor dem Import noch einmal an.</p>
+    <div id="qrCanvasWrap" style="display:flex;justify-content:center;padding:14px;background:white;border-radius:14px;margin:12px 0"></div>
+    <small id="qrTransferInfo"></small>
+  </div>
+</div>
+<div id="transferImportModal" class="modal" style="display:none">
+  <div class="modalbox" style="max-width:560px">
+    <button onclick="closeTransferImport()" style="float:right">×</button>
+    <h2>Datensätze importieren</h2>
+    <div id="transferImportPreview"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="secondary" onclick="closeTransferImport()">Abbrechen</button>
+      <button onclick="confirmTransferImport()">Importieren</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+
+</body></html>
