@@ -34,8 +34,8 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 <header><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><h1>Mein Zahlungsplaner</h1><p>Rechnungen, Forderungen und wiederkehrende Zahlungen im Blick behalten.</p></div><button onclick="refreshApp()" title="Aktualisieren" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--accent);font-size:23px;cursor:pointer">↻</button></div></header>
 <main>
 <section class="summary">
-<div class="card"><small>Noch zu zahlen</small><strong id="sumPay">0 €</strong></div>
-<div class="card"><small>Noch zu bekommen</small><strong class="good" id="sumGet">0 €</strong></div>
+<button class="card summarybtn" onclick="openSummary('pay')"><small>Noch zu zahlen</small><strong id="sumPay">0 €</strong><span class="cardhint">Details anzeigen ›</span></button>
+<button class="card summarybtn" onclick="openSummary('get')"><small>Noch zu bekommen</small><strong class="good" id="sumGet">0 €</strong><span class="cardhint">Details anzeigen ›</span></button>
 <button class="card summarybtn" onclick="openSummary('late')"><small>Überfällig</small><strong class="bad" id="sumLate">0 €</strong><span class="cardhint">Details anzeigen ›</span></button>
 <button class="card summarybtn" onclick="openSummary('two')"><small>In 2 Tagen fällig</small><strong class="bad" id="sumTwo">0 €</strong><span class="cardhint">Details anzeigen ›</span></button>
 <button class="card summarybtn" onclick="openSummary('seven')"><small>In 7 Tagen fällig</small><strong id="sumSoon">0 €</strong><span class="cardhint">Details anzeigen ›</span></button>
@@ -144,7 +144,7 @@ function renderAttention(){
  if(two.length)h+=`<h3 style="margin-top:18px">In 2 Tagen fällig</h3>`+two.map(x=>attentionRow(x,"In 2 Tagen","soon")).join("");
  $("attentionList").innerHTML=h||`<div class="empty">Aktuell nichts überfällig und nichts in genau 2 Tagen fällig.</div>`;
 }
-function renderEntries(){let arr=store.entries.filter(x=>filter==="all"||filter==="open"?(filter==="all"||x.status!=="done"):filter==="done"?x.status==="done":statusOf(x)==="late").sort((a,b)=>(a.status==="done")-(b.status==="done")||a.due.localeCompare(b.due));
+function renderEntries(){let arr=store.entries.filter(x=>filter==="all"?true:filter==="open"?x.status!=="done":filter==="done"?x.status==="done":statusOf(x)==="late").sort((a,b)=>(a.status==="done")-(b.status==="done")||a.due.localeCompare(b.due));
 $("list").innerHTML=arr.length?arr.map(x=>{let s=statusOf(x),label=s==="late"?"Überfällig":s==="soon"?"Bald fällig":s==="done"?"Erledigt":"Offen";return `<div class="entry"><div style="display:flex;align-items:flex-start"><input type="checkbox" style="margin:4px 10px 0 0;width:18px;height:18px" ${selectedIds.has(x.id)?"checked":""} onchange="selectEntry('${x.id}',this.checked)"><div><h3>${esc(x.party)}</h3><div><span class="badge ${s}">${label}</span><span class="badge">${esc(x.area)}</span><span class="badge">${x.type==="pay"?"Zahlen":"Bekommen"}</span></div><div class="meta">Fällig: ${fmt(x.due)}${x.note?" · "+esc(x.note):""}</div><div class="actions"><button onclick="toggleDone('${x.id}')">${x.status==="done"?"↩ Wieder öffnen":"✓ Erledigt"}</button><button onclick="editEntry('${x.id}')">Bearbeiten</button><button onclick="removeEntry('${x.id}')">Löschen</button></div></div><div class="amount ${x.type==="get"?"good":""}">${x.type==="get"?"+":"−"} ${money(x.amount)}</div></div>`}).join(""):`<div class="empty">Hier gibt es noch keine Einträge.</div>`;updateSelectTools()}
 function intervalLabel(n){n=Number(n||1);return n===1?"Monatlich":n===2?"Alle 2 Monate":n===3?"Vierteljährlich":n===6?"Halbjährlich":n===12?"Jährlich":`Alle ${n} Monate`}
 function renderRecurring(){$("recTotal").textContent=`Wiederkehrende Zahlungen: ${store.recurring.length} · Diese Zahlungen werden nicht zu „Noch zu zahlen“ addiert.`;$("recList").innerHTML=store.recurring.length?store.recurring.slice().sort((a,b)=>a.day-b.day).map(x=>`<div class="entry"><div style="display:flex;align-items:flex-start"><input type="checkbox" style="margin:4px 10px 0 0;width:18px;height:18px" ${selectedIds.has(x.id)?"checked":""} onchange="selectEntry('${x.id}',this.checked)"><div><h3>${esc(x.party)}</h3><div><span class="badge">${esc(x.area)}</span><span class="badge">${intervalLabel(x.interval)} · am ${x.day}.</span></div><div class="meta">${x.note?esc(x.note):"Wiederkehrende Zahlung"}${x.start?" · ab "+x.start.split("-").reverse().join("."):""}</div><div class="actions"><button onclick="editRecurring('${x.id}')">Bearbeiten</button><button onclick="removeRecurring('${x.id}')">Löschen</button></div></div><div class="amount">− ${money(x.amount)}</div></div>`).join(""):`<div class="empty">Noch keine wiederkehrenden Zahlungen eingetragen.</div>`}
@@ -163,13 +163,16 @@ function setFilter(btn){document.querySelectorAll(".tabs button").forEach(b=>b.c
 function moveMonth(n){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+n,1);renderCalendar()}
 
 function summaryEntries(kind){
- let open=store.entries.filter(x=>x.status!=="done"&&x.type==="pay");
+ let allOpen=store.entries.filter(x=>x.status!=="done");
+ if(kind==="pay")return allOpen.filter(x=>x.type==="pay").sort((a,b)=>a.due.localeCompare(b.due));
+ if(kind==="get")return allOpen.filter(x=>x.type==="get").sort((a,b)=>a.due.localeCompare(b.due));
+ let open=allOpen.filter(x=>x.type==="pay");
  if(kind==="late")return open.filter(x=>daysUntil(x.due)<0).sort((a,b)=>a.due.localeCompare(b.due));
  if(kind==="two")return open.filter(x=>daysUntil(x.due)===2).sort((a,b)=>a.due.localeCompare(b.due));
  return open.filter(x=>{let d=daysUntil(x.due);return d>=0&&d<=7}).sort((a,b)=>a.due.localeCompare(b.due));
 }
 function openSummary(kind){
- const titles={late:"Überfällige Rechnungen",two:"In 2 Tagen fällig",seven:"In 7 Tagen fällig"};
+ const titles={pay:"Noch zu zahlen",get:"Noch zu bekommen",late:"Überfällige Rechnungen",two:"In 2 Tagen fällig",seven:"In 7 Tagen fällig"};
  $("summaryTitle").textContent=titles[kind];
  const arr=summaryEntries(kind);
  if(!arr.length){$("summaryContent").innerHTML=`<div class="empty">Keine Rechnungen in dieser Übersicht.</div>`}
