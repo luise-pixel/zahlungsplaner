@@ -115,7 +115,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 const KEY="zahlungsplaner-v2", OLD="zahlungsplaner-v1";
 let store=JSON.parse(localStorage.getItem(KEY)||"null");
 if(!store){let old=JSON.parse(localStorage.getItem(OLD)||"[]");store={entries:Array.isArray(old)?old:[],recurring:[]}}
-let filter="open", calDate=new Date(); const $=id=>document.getElementById(id);
+let filter="open", calDate=new Date(), selectedIds=new Set(); const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(n||0);
 function todayStr(){let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function daysUntil(s){let a=new Date(todayStr()+"T00:00:00"),b=new Date(s+"T00:00:00");return Math.round((b-a)/86400000)}
