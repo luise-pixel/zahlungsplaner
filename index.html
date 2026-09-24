@@ -30,7 +30,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 .fab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:white;font-size:32px;box-shadow:0 7px 25px #0003;cursor:pointer}.note{font-size:12px;color:var(--muted);margin-top:12px}
 @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:1fr}.amount{text-align:left}.day{min-height:90px;padding:4px}.calevent{font-size:9px}.weekday{font-size:10px;padding:6px 2px}}
 .summarybtn{font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}.summarybtn:hover{border-color:var(--accent);transform:translateY(-1px)}.cardhint{display:block;margin-top:8px;font-size:11px;color:var(--muted)}.summaryrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.summaryrow:first-child{border-top:0}.summaryrow h3{margin:0 0 4px;font-size:15px}.summaryrow .amount{white-space:nowrap}.summaryactions{display:flex;gap:6px;margin-top:8px}.summaryactions button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:white;cursor:pointer}.summaryactions .finish{color:var(--good);font-weight:700}.summaryactions .edit{color:#2563eb;font-weight:700}.summarytotal{padding:10px 0 0;border-top:2px solid var(--line);margin-top:8px;font-weight:750;text-align:right}
-/* V5.5.1: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
+/* V5.6: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
 #list { display:block !important; width:100%; }
 #list > .entry {
   display:flex !important;
@@ -38,6 +38,24 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
   box-sizing:border-box;
   margin:0 0 10px 0 !important;
 }
+
+
+/* V5.6 – QR transfer dialogs */
+.transfer-overlay{
+ position:fixed !important; inset:0 !important; z-index:99999 !important;
+ background:rgba(0,0,0,.48) !important; padding:18px !important;
+ align-items:center !important; justify-content:center !important;
+ overflow:auto !important;
+}
+.transfer-dialog{
+ width:min(92vw,520px) !important; max-height:90vh !important; overflow:auto !important;
+ background:#fff !important; border:1px solid var(--line) !important;
+ border-radius:18px !important; box-shadow:0 18px 60px rgba(0,0,0,.22) !important;
+ padding:20px !important; margin:auto !important;
+}
+.transfer-close{float:right !important;width:36px;height:36px;border-radius:50% !important;font-size:20px !important}
+#qrCanvasWrap canvas,#qrCanvasWrap img{max-width:100% !important;height:auto !important}
+#qr-reader{width:100% !important;margin-top:12px}
 
 </style></head>
 <body>
@@ -58,7 +76,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 </div>
 
 <section id="payments" class="view active">
-<div class="toolbar"><button class="primary" onclick="openEntryForm()">+ Neuer Eintrag</button><button onclick="exportData()">Backup exportieren</button><button onclick="$('importFile').click()">Backup importieren</button><input id="importFile" type="file" accept=".json" hidden onchange="importData(event)"></div>
+<div class="toolbar"><button class="primary" onclick="openEntryForm()">+ Neuer Eintrag</button><button onclick="exportData()">Backup exportieren</button><button onclick="$('importFile').click()">Backup importieren</button><button onclick="openQRScanner()">QR-Code scannen</button><input id="importFile" type="file" accept=".json" hidden onchange="importData(event)"></div>
 <div class="panel" style="margin-bottom:14px">
 <h2 style="margin-top:0">Fälligkeitsübersicht</h2>
 <div id="attentionList"></div>
@@ -241,15 +259,42 @@ function showTransferQR(){
 }
 function closeTransferQR(){$("qrTransferModal").style.display="none"}
 let pendingTransfer=null;
+function prepareTransferPayload(payload){
+ if(!payload||payload.app!=="Zahlungsplaner"||!Array.isArray(payload.entries))return false;
+ pendingTransfer=payload.entries;
+ $("transferImportPreview").innerHTML=pendingTransfer.map(x=>`<div style="padding:9px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px"><div><strong>${esc(x.party||"")}</strong><br><small>Fällig: ${fmtDate(x.due)} · ${x.type==="get"?"Bekommen":"Zahlen"}</small></div><strong>${money(+x.amount||0)}</strong></div>`).join("");
+ $("transferImportModal").style.display="flex";
+ return true
+}
 function checkTransferHash(){
  if(!location.hash.startsWith("#transfer="))return;
+ try{ prepareTransferPayload(transferDecode(location.hash.slice(10))) }catch(e){}
+}
+let qrScanner=null;
+async function openQRScanner(){
+ if(typeof Html5Qrcode==="undefined"){alert("Die Scan-Funktion konnte nicht geladen werden. Bitte die App einmal mit Internetverbindung über ↻ aktualisieren.");return}
+ $("qrScannerModal").style.display="flex";
+ $("qrScanStatus").textContent="Kamera wird gestartet …";
  try{
-   const payload=transferDecode(location.hash.slice(10));
-   if(!payload||payload.app!=="Zahlungsplaner"||!Array.isArray(payload.entries))return;
-   pendingTransfer=payload.entries;
-   $("transferImportPreview").innerHTML=pendingTransfer.map(x=>`<div style="padding:9px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px"><div><strong>${esc(x.party||"")}</strong><br><small>Fällig: ${fmtDate(x.due)} · ${x.type==="get"?"Bekommen":"Zahlen"}</small></div><strong>${money(+x.amount||0)}</strong></div>`).join("");
-   $("transferImportModal").style.display="flex";
- }catch(e){}
+   qrScanner=new Html5Qrcode("qr-reader");
+   await qrScanner.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},async decoded=>{
+     try{
+       let raw=decoded;
+       let i=raw.indexOf("#transfer=");
+       if(i<0)throw new Error();
+       let payload=transferDecode(raw.slice(i+10));
+       await closeQRScanner();
+       if(!prepareTransferPayload(payload))throw new Error();
+     }catch(e){$("qrScanStatus").textContent="Dieser QR-Code gehört nicht zum Zahlungsplaner."}
+   },()=>{});
+   $("qrScanStatus").textContent="QR-Code in den Kamerarahmen halten.";
+ }catch(e){
+   $("qrScanStatus").textContent="Kamera konnte nicht geöffnet werden. Bitte Kamerazugriff erlauben.";
+ }
+}
+async function closeQRScanner(){
+ if(qrScanner){try{await qrScanner.stop()}catch(e){} try{qrScanner.clear()}catch(e){} qrScanner=null}
+ $("qrScannerModal").style.display="none";
 }
 function closeTransferImport(){
  $("transferImportModal").style.display="none"; pendingTransfer=null;
@@ -303,18 +348,18 @@ async function checkLocalReminders(){
 renderAll(); checkLocalReminders(); if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 window.addEventListener("load",checkTransferHash);
 </script>
-<div id="qrTransferModal" class="modal" style="display:none">
-  <div class="modalbox" style="max-width:460px;text-align:center">
-    <button onclick="closeTransferQR()" style="float:right">×</button>
+<div id="qrTransferModal" class="transfer-overlay" style="display:none">
+  <div class="transfer-dialog" style="text-align:center">
+    <button class="transfer-close" onclick="closeTransferQR()">×</button>
     <h2 style="text-align:left">Datensätze übertragen</h2>
     <p style="text-align:left">Scanne den QR-Code mit dem anderen Gerät. Dort öffnet sich der Zahlungsplaner und zeigt die Datensätze vor dem Import noch einmal an.</p>
     <div id="qrCanvasWrap" style="display:flex;justify-content:center;padding:14px;background:white;border-radius:14px;margin:12px 0"></div>
     <small id="qrTransferInfo"></small>
   </div>
 </div>
-<div id="transferImportModal" class="modal" style="display:none">
-  <div class="modalbox" style="max-width:560px">
-    <button onclick="closeTransferImport()" style="float:right">×</button>
+<div id="transferImportModal" class="transfer-overlay" style="display:none">
+  <div class="transfer-dialog">
+    <button class="transfer-close" onclick="closeTransferImport()">×</button>
     <h2>Datensätze importieren</h2>
     <div id="transferImportPreview"></div>
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
@@ -324,5 +369,17 @@ window.addEventListener("load",checkTransferHash);
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<div id="qrScannerModal" class="transfer-overlay" style="display:none">
+ <div class="transfer-dialog">
+  <button class="transfer-close" onclick="closeQRScanner()">×</button>
+  <h2>QR-Code scannen</h2>
+  <p>Scanne hier den QR-Code vom anderen Gerät. So werden die Datensätze direkt in dieser App importiert.</p>
+  <div id="qr-reader"></div>
+  <small id="qrScanStatus"></small>
+ </div>
+</div>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
 
 </body></html>
