@@ -30,7 +30,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 .fab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:white;font-size:32px;box-shadow:0 7px 25px #0003;cursor:pointer}.note{font-size:12px;color:var(--muted);margin-top:12px}
 @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:1fr}.amount{text-align:left}.day{min-height:90px;padding:4px}.calevent{font-size:9px}.weekday{font-size:10px;padding:6px 2px}}
 .summarybtn{font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}.summarybtn:hover{border-color:var(--accent);transform:translateY(-1px)}.cardhint{display:block;margin-top:8px;font-size:11px;color:var(--muted)}.summaryrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.summaryrow:first-child{border-top:0}.summaryrow h3{margin:0 0 4px;font-size:15px}.summaryrow .amount{white-space:nowrap}.summaryactions{display:flex;gap:6px;margin-top:8px}.summaryactions button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:white;cursor:pointer}.summaryactions .finish{color:var(--good);font-weight:700}.summaryactions .edit{color:#2563eb;font-weight:700}.summarytotal{padding:10px 0 0;border-top:2px solid var(--line);margin-top:8px;font-weight:750;text-align:right}
-/* V6.5: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
+/* V6.5.1: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
 #list { display:block !important; width:100%; }
 #list > .entry {
   display:flex !important;
@@ -40,7 +40,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 }
 
 
-/* V6.5 – QR transfer dialogs */
+/* V6.5.1 – QR transfer dialogs */
 .transfer-overlay{
  position:fixed !important; inset:0 !important; z-index:99999 !important;
  background:rgba(0,0,0,.48) !important; padding:18px !important;
@@ -58,7 +58,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 #qr-reader{width:100% !important;margin-top:12px}
 
 
-/* V6.5 – mobile Auswahlleiste */
+/* V6.5.1 – mobile Auswahlleiste */
 .selection-dock{
  position:fixed !important;
  left:50% !important;
@@ -108,7 +108,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 body{padding-bottom:100px}
 
 
-/* V6.5 Einstellungen */
+/* V6.5.1 Einstellungen */
 #settingsDlg{
   width:min(560px,calc(100% - 28px));
   max-width:560px;
@@ -454,12 +454,14 @@ function selectAllVisible(){
  let ids=[];
  if(active&&active.id==="recurring"){
    ids=store.recurring.map(x=>x.id);
+ }else if(active&&active.id==="payments"){
+   ids=store.entries.filter(x=>filter==="all"?true:filter==="open"?x.status!=="done":filter==="done"?x.status==="done":statusOf(x)==="late").map(x=>x.id);
  }else{
-   let arr=store.entries.filter(x=>filter==="all"?true:filter==="open"?x.status!=="done":filter==="done"?x.status==="done":statusOf(x)==="late");
-   ids=arr.map(x=>x.id);
+   return;
  }
+ selectedIds.clear();
  ids.forEach(id=>selectedIds.add(id));
- renderEntries(); renderRecurring(); updateSelectTools();
+ renderEntries();renderRecurring();updateSelectTools();
 }
 function clearSelection(){selectedIds.clear();renderEntries();renderRecurring();updateSelectTools()}
 function updateSelectTools(){let bar=$("selectTools");if(!bar)return;bar.style.display=selectedIds.size?"flex":"none";$("selectedCount").textContent=`${selectedIds.size} ausgewählt`}
@@ -474,6 +476,12 @@ function transferDecode(str){
  const bin=atob(str), bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
  return JSON.parse(new TextDecoder().decode(bytes))
 }
+function compactTransferEntry(x){
+ return [x.party||"",Number(x.amount)||0,x.due||"",x.type||"pay",x.area||"Privat",x.note||"",x.status||"open",x.created||""];
+}
+function expandTransferEntry(a){
+ return {party:a[0]||"",amount:Number(a[1])||0,due:a[2]||"",type:a[3]||"pay",area:a[4]||"Privat",note:a[5]||"",status:a[6]||"open",created:a[7]||""};
+}
 function compactRecurring(r){
  return [r.party||"",Number(r.amount)||0,Number(r.day)||1,Number(r.interval)||1,r.start||"",r.end||"",r.area||"Privat",r.note||"",Array.isArray(r.paidMonths)?r.paidMonths:[]];
 }
@@ -483,7 +491,7 @@ function expandRecurring(a){
 function showTransferQR(){
  const items=store.entries.filter(x=>selectedIds.has(x.id));
  const recs=store.recurring.filter(x=>selectedIds.has(x.id));
- if(!items.length&&!recs.length)return;
+ if(!items.length&&!recs.length){alert("Bitte wähle zuerst mindestens einen Datensatz aus.");return;}
  const payload={a:"ZP",v:3,e:items.map(compactTransferEntry),r:recs.map(compactRecurring)};
  const qrText="ZP3:"+transferEncode(payload);
  if(qrText.length>2800){alert("Für einen QR-Code sind zu viele Datensätze ausgewählt. Bitte übertrage sie in kleineren Gruppen.");return}
