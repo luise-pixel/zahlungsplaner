@@ -30,7 +30,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 .fab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:white;font-size:32px;box-shadow:0 7px 25px #0003;cursor:pointer}.note{font-size:12px;color:var(--muted);margin-top:12px}
 @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:1fr}.amount{text-align:left}.day{min-height:90px;padding:4px}.calevent{font-size:9px}.weekday{font-size:10px;padding:6px 2px}}
 .summarybtn{font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}.summarybtn:hover{border-color:var(--accent);transform:translateY(-1px)}.cardhint{display:block;margin-top:8px;font-size:11px;color:var(--muted)}.summaryrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.summaryrow:first-child{border-top:0}.summaryrow h3{margin:0 0 4px;font-size:15px}.summaryrow .amount{white-space:nowrap}.summaryactions{display:flex;gap:6px;margin-top:8px}.summaryactions button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:white;cursor:pointer}.summaryactions .finish{color:var(--good);font-weight:700}.summaryactions .edit{color:#2563eb;font-weight:700}.summarytotal{padding:10px 0 0;border-top:2px solid var(--line);margin-top:8px;font-weight:750;text-align:right}
-/* V6.9: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
+/* V7.1: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
 #list { display:block !important; width:100%; }
 #list > .entry {
   display:flex !important;
@@ -40,7 +40,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 }
 
 
-/* V6.9 – QR transfer dialogs */
+/* V7.1 – QR transfer dialogs */
 .transfer-overlay{
  position:fixed !important; inset:0 !important; z-index:99999 !important;
  background:rgba(0,0,0,.48) !important; padding:18px !important;
@@ -58,7 +58,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 #qr-reader{width:100% !important;margin-top:12px}
 
 
-/* V6.9 – mobile Auswahlleiste */
+/* V7.1 – mobile Auswahlleiste */
 .selection-dock{
  position:fixed !important;
  left:50% !important;
@@ -108,7 +108,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 body{padding-bottom:100px}
 
 
-/* V6.9 Einstellungen */
+/* V7.1 Einstellungen */
 #settingsDlg{
   width:min(560px,calc(100% - 28px));
   max-width:560px;
@@ -146,7 +146,7 @@ body{padding-bottom:100px}
  .settings-head h2{font-size:25px}
 }
 
-/* V6.9 – iPhone Einstellungsfenster */
+/* V7.1 – iPhone Einstellungsfenster */
 #settingsDlg{
   position:fixed !important;
   inset:0 !important;
@@ -174,7 +174,7 @@ body.settings-open{
   width:100% !important;
 }
 
-/* V6.9 – Appweite Suche */
+/* V7.1 – Appweite Suche */
 #searchDlg{
  width:min(620px,calc(100% - 22px));height:min(82dvh,720px);max-height:82dvh;
  border:0;border-radius:26px;padding:0;overflow:hidden;background:var(--bg);
@@ -195,13 +195,13 @@ body.settings-open{
 body.search-open{overflow:hidden!important;position:fixed!important;width:100%!important}
 @media(max-width:480px){.search-shell{padding:19px 15px}.search-head h2{font-size:25px}}
 
-/* V6.9 – Backup in Einstellungen */
+/* V7.1 – Backup in Einstellungen */
 .settings-backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .settings-backup-actions button{min-height:44px}
 .settings-backup-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
 @media(max-width:480px){.settings-backup-actions{grid-template-columns:1fr}}
 
-/* V6.9 – bezahlte Kalendereinträge */
+/* V7.1 – bezahlte Kalendereinträge */
 .calevent.calpaid{
   background:#e7e3df !important;
   border-color:#d1cbc5 !important;
@@ -210,7 +210,7 @@ body.search-open{overflow:hidden!important;position:fixed!important;width:100%!i
   opacity:.82;
 }
 
-/* V6.9 – Kalender direkt bedienen */
+/* V7.1 – Kalender direkt bedienen */
 .calevent.calclick{cursor:pointer}
 .calevent.calclick:active{transform:scale(.98)}
 #calActionDlg{width:min(480px,calc(100% - 24px));border:0;border-radius:24px;padding:0;background:var(--bg)}
@@ -221,6 +221,16 @@ body.search-open{overflow:hidden!important;position:fixed!important;width:100%!i
 .cal-action-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .cal-action-buttons button{min-height:45px}
 @media(max-width:480px){.cal-action-buttons{grid-template-columns:1fr}}
+
+/* V7.1 – optionale Konten & Synchronisation */
+.sync-box{display:flex;flex-direction:column;gap:9px;background:#faf7f4;border:1px solid var(--line);border-radius:15px;padding:13px}
+.sync-box>span,.sync-note{font-size:12px;color:var(--muted);line-height:1.4}
+.sync-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sync-actions button,.sync-box>button{min-height:43px}
+.sync-status-row{display:flex;align-items:center;gap:10px}.sync-status-row div{display:flex;flex-direction:column;gap:2px}
+.sync-dot{width:10px;height:10px;border-radius:50%;background:var(--good);box-shadow:0 0 0 4px #dff0e5}
+.sync-logout{background:transparent!important;color:var(--muted)}
+@media(max-width:480px){.sync-actions{grid-template-columns:1fr}}
 </style></head>
 <body>
 <header><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><h1>Mein Zahlungsplaner</h1><p>Rechnungen, Forderungen und wiederkehrende Zahlungen im Blick behalten.</p></div><div style="display:flex;gap:7px"><button onclick="openGlobalSearch()" title="Suchen" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--accent);font-size:19px;cursor:pointer">⌕</button><button onclick="openSettings()" title="Einstellungen" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--accent);font-size:20px;cursor:pointer">⚙</button><button onclick="refreshApp()" title="Aktualisieren" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--accent);font-size:23px;cursor:pointer">↻</button></div></div></header>
@@ -340,6 +350,27 @@ body.search-open{overflow:hidden!important;position:fixed!important;width:100%!i
 </section>
 
 <section class="settings-card">
+<h3>Synchronisation</h3>
+<p class="settings-copy">Optional: Melde dich an, um deine Daten zwischen PC, iPhone und Android zu synchronisieren. Ohne Konto bleibt die App wie bisher lokal nutzbar.</p>
+<div id="syncNotConfigured" class="sync-box">
+<strong>Synchronisation derzeit nicht verfügbar</strong>
+<span>Die Serververbindung konnte nicht geladen werden. Bitte die App einmal mit Internetverbindung aktualisieren.</span>
+</div>
+<div id="syncLoggedOut" class="sync-box" style="display:none">
+<input id="syncEmail" type="email" autocomplete="email" placeholder="E-Mail-Adresse">
+<input id="syncPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Passwort">
+<div class="sync-actions"><button type="button" class="primary" onclick="syncSignIn()">Anmelden</button><button type="button" onclick="syncSignUp()">Konto erstellen</button></div>
+<div id="syncAuthMsg" class="sync-note"></div>
+</div>
+<div id="syncLoggedIn" class="sync-box" style="display:none">
+<div class="sync-status-row"><span class="sync-dot"></span><div><strong>Verbunden</strong><span id="syncUserEmail"></span></div></div>
+<div id="syncState" class="sync-note">Bereit zur Synchronisierung.</div>
+<div class="sync-actions"><button type="button" class="primary" onclick="pushSyncData()">Dieses Gerät hochladen</button><button type="button" onclick="pullSyncData(true)">Serverdaten laden</button></div>
+<button type="button" class="sync-logout" onclick="syncSignOut()">Abmelden</button>
+</div>
+</section>
+
+<section class="settings-card">
 <h3>Backup & Daten</h3>
 <p class="settings-copy">Sichere deine Daten als Datei oder stelle ein vorhandenes Backup wieder her.</p>
 <div class="settings-backup-actions">
@@ -354,11 +385,11 @@ body.search-open{overflow:hidden!important;position:fixed!important;width:100%!i
 <h3>Über die App</h3>
 <div class="about-grid">
 <div class="about-row"><span>App</span><strong>Mein Zahlungsplaner</strong></div>
-<div class="about-row"><span>Version</span><strong>6.5</strong></div>
+<div class="about-row"><span>Version</span><strong>7.1</strong></div>
 <div class="about-row"><span>Entwickelt von</span><strong>Luise Mähl</strong></div>
-<div class="about-row"><span>Datenspeicherung</span><strong>Lokal auf diesem Gerät</strong></div>
+<div class="about-row"><span>Datenspeicherung</span><strong>Lokal; optional synchronisiert</strong></div>
 </div>
-<div class="about-note">Mein Zahlungsplaner wurde von Luise Mähl entwickelt. Die App speichert Zahlungsdaten lokal auf dem jeweiligen Gerät. Eine Übertragung auf andere Geräte erfolgt nur bewusst über die vorhandenen QR- oder Backup-Funktionen.</div>
+<div class="about-note">Mein Zahlungsplaner wurde von Luise Mähl entwickelt. Die App funktioniert weiterhin lokal auf dem jeweiligen Gerät. Optional können angemeldete Nutzer ihre Daten über ein eigenes Supabase-Konto zwischen mehreren Geräten synchronisieren. QR- und Backup-Funktionen bleiben zusätzlich erhalten.</div>
 </section>
 
 <button type="button" class="savebtn" onclick="closeSettings()" style="width:100%">Fertig</button>
@@ -382,6 +413,7 @@ body.search-open{overflow:hidden!important;position:fixed!important;width:100%!i
 </div><div class="formactions"><button type="button" class="cancelbtn" onclick="recDlg.close()">Abbrechen</button><button class="savebtn">Speichern</button></div></form></dialog>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const KEY="zahlungsplaner-v2", OLD="zahlungsplaner-v1";
 let store=JSON.parse(localStorage.getItem(KEY)||"null");
@@ -392,7 +424,7 @@ let filter="open", calDate=new Date(), selectedIds=new Set(); const $=id=>docume
 const money=n=>new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(n||0);
 function todayStr(){let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function daysUntil(s){let a=new Date(todayStr()+"T00:00:00"),b=new Date(s+"T00:00:00");return Math.round((b-a)/86400000)}
-function save(){localStorage.setItem(KEY,JSON.stringify(store));renderAll();checkLocalReminders()}
+function save(){localStorage.setItem(KEY,JSON.stringify(store));renderAll();checkLocalReminders();scheduleCloudSync()}
 function statusOf(x){if(x.status==="done")return"done";let d=daysUntil(x.due);return d<0?"late":d<=7?"soon":"open"}
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function fmt(s){if(!s)return"–";let [y,m,d]=s.split("-");return `${d}.${m}.${y}`}
@@ -404,9 +436,80 @@ function renderAreaSelects(){
    if(store.areas.includes(current))el.value=current;
  });
 }
+
+const SB_URL="https://hirrvhqfjfvkootpdrde.supabase.co";
+const SB_PUBLISHABLE_KEY="sb_publishable_EXj0MjkGivd-H_Fk1YtOBw_5KgC56zc";
+let sbClient=null,sbUser=null,syncReady=false,syncTimer=null,syncBusy=false;
+function initSupabase(){
+ if(!window.supabase){sbClient=null;renderSyncUI();return false}
+ try{
+   sbClient=window.supabase.createClient(SB_URL,SB_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+   sbClient.auth.getSession().then(({data})=>{sbUser=data.session?.user||null;renderSyncUI()});
+   sbClient.auth.onAuthStateChange((_event,session)=>{sbUser=session?.user||null;if(!sbUser)syncReady=false;renderSyncUI()});
+   return true;
+ }catch(e){console.warn("Supabase init",e);sbClient=null;renderSyncUI();return false}
+}
+function renderSyncUI(){
+ const configured=!!sbClient,a=$("syncNotConfigured"),b=$("syncLoggedOut"),c=$("syncLoggedIn");
+ if(!a||!b||!c)return;
+ a.style.display=configured?"none":"flex";
+ b.style.display=configured&&!sbUser?"flex":"none";
+ c.style.display=configured&&sbUser?"flex":"none";
+ if(sbUser)$("syncUserEmail").textContent=sbUser.email||"Angemeldetes Konto";
+}
+async function syncSignUp(){
+ if(!sbClient&&!initSupabase())return;
+ const email=$("syncEmail").value.trim(),password=$("syncPassword").value;
+ if(!email||password.length<6){$("syncAuthMsg").textContent="Bitte E-Mail und ein Passwort mit mindestens 6 Zeichen eingeben.";return}
+ $("syncAuthMsg").textContent="Konto wird erstellt …";
+ const {data,error}=await sbClient.auth.signUp({email,password});
+ if(error){$("syncAuthMsg").textContent="Konto konnte nicht erstellt werden: "+error.message;return}
+ $("syncAuthMsg").textContent=data.session?"Konto erstellt und angemeldet.":"Konto erstellt. Bitte bestätige ggf. die E-Mail und melde dich danach an.";
+}
+async function syncSignIn(){
+ if(!sbClient&&!initSupabase())return;
+ const email=$("syncEmail").value.trim(),password=$("syncPassword").value;
+ $("syncAuthMsg").textContent="Anmeldung …";
+ const {data,error}=await sbClient.auth.signInWithPassword({email,password});
+ if(error){$("syncAuthMsg").textContent="Anmeldung fehlgeschlagen: "+error.message;return}
+ sbUser=data.user;syncReady=false;renderSyncUI();
+ $("syncState").textContent="Angemeldet. Wähle beim ersten Mal, ob dieses Gerät hochgeladen oder die Serverdaten geladen werden sollen.";
+}
+async function syncSignOut(){if(sbClient)await sbClient.auth.signOut();sbUser=null;syncReady=false;renderSyncUI()}
+function cloudPayload(){return {entries:store.entries||[],recurring:store.recurring||[],loans:store.loans||[],areas:store.areas||["Privat","Gewerblich"]}}
+async function pushSyncData(silent=false){
+ if(!sbClient||!sbUser||syncBusy)return;
+ syncBusy=true;if($("syncState"))$("syncState").textContent="Synchronisiere …";
+ const row={user_id:sbUser.id,data:cloudPayload(),updated_at:new Date().toISOString()};
+ const {error}=await sbClient.from("user_data").upsert(row,{onConflict:"user_id"});
+ syncBusy=false;
+ if(error){if($("syncState"))$("syncState").textContent="Synchronisierung fehlgeschlagen: "+error.message;if(!silent)alert("Synchronisierung fehlgeschlagen. Prüfe die Supabase-Einrichtung.");return}
+ syncReady=true;localStorage.setItem("zahlungsplaner-last-sync",row.updated_at);
+ if($("syncState"))$("syncState").textContent="Zuletzt synchronisiert: "+new Date(row.updated_at).toLocaleString("de-DE");
+}
+async function pullSyncData(ask=false){
+ if(!sbClient||!sbUser||syncBusy)return;
+ if(ask&&!confirm("Serverdaten auf dieses Gerät laden? Die aktuellen lokalen Zahlungsdaten werden dadurch ersetzt. Erstelle bei Bedarf vorher ein Backup."))return;
+ syncBusy=true;if($("syncState"))$("syncState").textContent="Lade Serverdaten …";
+ const {data,error}=await sbClient.from("user_data").select("data,updated_at").eq("user_id",sbUser.id).maybeSingle();
+ syncBusy=false;
+ if(error){$("syncState").textContent="Laden fehlgeschlagen: "+error.message;return}
+ if(!data){$("syncState").textContent="Für dieses Konto liegen noch keine Serverdaten vor.";return}
+ const d=data.data||{};
+ store={entries:Array.isArray(d.entries)?d.entries:[],recurring:Array.isArray(d.recurring)?d.recurring:[],loans:Array.isArray(d.loans)?d.loans:[],areas:Array.isArray(d.areas)&&d.areas.length?d.areas:["Privat","Gewerblich"]};
+ localStorage.setItem(KEY,JSON.stringify(store));syncReady=true;renderAll();
+ localStorage.setItem("zahlungsplaner-last-sync",data.updated_at||new Date().toISOString());
+ $("syncState").textContent="Serverdaten geladen: "+new Date(data.updated_at||Date.now()).toLocaleString("de-DE");
+}
+function scheduleCloudSync(){
+ if(!syncReady||!sbClient||!sbUser)return;
+ clearTimeout(syncTimer);syncTimer=setTimeout(()=>pushSyncData(true),900);
+}
+initSupabase();
 let settingsScrollY=0;
 function openSettings(){
  renderAreaSettings();
+ renderSyncUI();
  settingsScrollY=window.scrollY||window.pageYOffset||0;
  document.body.style.top=`-${settingsScrollY}px`;
  document.body.classList.add("settings-open");
