@@ -30,7 +30,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 .fab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:white;font-size:32px;box-shadow:0 7px 25px #0003;cursor:pointer}.note{font-size:12px;color:var(--muted);margin-top:12px}
 @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:1fr}.amount{text-align:left}.day{min-height:90px;padding:4px}.calevent{font-size:9px}.weekday{font-size:10px;padding:6px 2px}}
 .summarybtn{font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}.summarybtn:hover{border-color:var(--accent);transform:translateY(-1px)}.cardhint{display:block;margin-top:8px;font-size:11px;color:var(--muted)}.summaryrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.summaryrow:first-child{border-top:0}.summaryrow h3{margin:0 0 4px;font-size:15px}.summaryrow .amount{white-space:nowrap}.summaryactions{display:flex;gap:6px;margin-top:8px}.summaryactions button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:white;cursor:pointer}.summaryactions .finish{color:var(--good);font-weight:700}.summaryactions .edit{color:#2563eb;font-weight:700}.summarytotal{padding:10px 0 0;border-top:2px solid var(--line);margin-top:8px;font-weight:750;text-align:right}
-/* V6.5.1: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
+/* V6.5.2: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
 #list { display:block !important; width:100%; }
 #list > .entry {
   display:flex !important;
@@ -40,7 +40,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 }
 
 
-/* V6.5.1 – QR transfer dialogs */
+/* V6.5.2 – QR transfer dialogs */
 .transfer-overlay{
  position:fixed !important; inset:0 !important; z-index:99999 !important;
  background:rgba(0,0,0,.48) !important; padding:18px !important;
@@ -58,7 +58,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 #qr-reader{width:100% !important;margin-top:12px}
 
 
-/* V6.5.1 – mobile Auswahlleiste */
+/* V6.5.2 – mobile Auswahlleiste */
 .selection-dock{
  position:fixed !important;
  left:50% !important;
@@ -108,7 +108,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 body{padding-bottom:100px}
 
 
-/* V6.5.1 Einstellungen */
+/* V6.5.2 Einstellungen */
 #settingsDlg{
   width:min(560px,calc(100% - 28px));
   max-width:560px;
@@ -468,13 +468,13 @@ function updateSelectTools(){let bar=$("selectTools");if(!bar)return;bar.style.d
 function transferEncode(obj){
  const bytes=new TextEncoder().encode(JSON.stringify(obj));
  let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b));
- return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")
+ return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
 function transferDecode(str){
  str=str.replace(/-/g,"+").replace(/_/g,"/");
  while(str.length%4)str+="=";
- const bin=atob(str), bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
- return JSON.parse(new TextDecoder().decode(bytes))
+ const bin=atob(str),bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
+ return JSON.parse(new TextDecoder().decode(bytes));
 }
 function compactTransferEntry(x){
  return [x.party||"",Number(x.amount)||0,x.due||"",x.type||"pay",x.area||"Privat",x.note||"",x.status||"open",x.created||""];
@@ -489,21 +489,26 @@ function expandRecurring(a){
  return {id:crypto.randomUUID(),party:a[0]||"",amount:Number(a[1])||0,day:Number(a[2])||1,interval:Number(a[3])||1,start:a[4]||"",end:a[5]||"",area:a[6]||"Privat",note:a[7]||"",paidMonths:Array.isArray(a[8])?a[8]:[]};
 }
 function showTransferQR(){
- const items=store.entries.filter(x=>selectedIds.has(x.id));
- const recs=store.recurring.filter(x=>selectedIds.has(x.id));
- if(!items.length&&!recs.length){alert("Bitte wähle zuerst mindestens einen Datensatz aus.");return;}
- const payload={a:"ZP",v:3,e:items.map(compactTransferEntry),r:recs.map(compactRecurring)};
- const qrText="ZP3:"+transferEncode(payload);
- if(qrText.length>2800){alert("Für einen QR-Code sind zu viele Datensätze ausgewählt. Bitte übertrage sie in kleineren Gruppen.");return}
- const wrap=$("qrCanvasWrap"); wrap.innerHTML="";
- if(typeof QRCode==="undefined"){alert("Die QR-Funktion konnte nicht geladen werden. Bitte die Seite einmal mit ↻ aktualisieren.");return}
  try{
+   const items=store.entries.filter(x=>selectedIds.has(x.id));
+   const recs=store.recurring.filter(x=>selectedIds.has(x.id));
+   if(!items.length&&!recs.length){alert("Bitte wähle zuerst mindestens einen Datensatz aus.");return;}
+   const payload={a:"ZP",v:3,e:items.map(compactTransferEntry),r:recs.map(compactRecurring)};
+   const qrText="ZP3:"+transferEncode(payload);
+   if(qrText.length>2800){alert("Für einen QR-Code sind zu viele Datensätze ausgewählt. Bitte übertrage sie in kleineren Gruppen.");return;}
+   const wrap=$("qrCanvasWrap");
+   if(!wrap){alert("Das QR-Fenster konnte nicht gefunden werden.");return;}
+   if(typeof QRCode==="undefined"){alert("Die QR-Funktion konnte nicht geladen werden. Bitte die Seite einmal mit Internetverbindung über ↻ aktualisieren.");return;}
+   wrap.innerHTML="";
    new QRCode(wrap,{text:qrText,width:300,height:300,correctLevel:QRCode.CorrectLevel.L});
    $("qrTransferInfo").textContent=(items.length+recs.length)+" Datensätze ausgewählt";
    $("qrTransferModal").style.display="flex";
- }catch(e){alert("Der QR-Code konnte nicht erstellt werden. Bitte wähle weniger Datensätze aus.")}
+ }catch(e){
+   alert("QR-Code konnte nicht erstellt werden: "+(e&&e.message?e.message:"unbekannter Fehler"));
+ }
 }
-function closeTransferQR(){$("qrTransferModal").style.display="none"}
+function closeTransferQR(){$("qrTransferModal").style.display="none";}
+
 let pendingTransfer=null, pendingRecurringTransfer=[];
 function prepareTransferPayload(payload){
  if(!payload||payload.app!=="Zahlungsplaner"||!Array.isArray(payload.entries))return false;
