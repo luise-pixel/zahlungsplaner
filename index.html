@@ -30,7 +30,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 .fab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:white;font-size:32px;box-shadow:0 7px 25px #0003;cursor:pointer}.note{font-size:12px;color:var(--muted);margin-top:12px}
 @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:1fr}.amount{text-align:left}.day{min-height:90px;padding:4px}.calevent{font-size:9px}.weekday{font-size:10px;padding:6px 2px}}
 .summarybtn{font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}.summarybtn:hover{border-color:var(--accent);transform:translateY(-1px)}.cardhint{display:block;margin-top:8px;font-size:11px;color:var(--muted)}.summaryrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.summaryrow:first-child{border-top:0}.summaryrow h3{margin:0 0 4px;font-size:15px}.summaryrow .amount{white-space:nowrap}.summaryactions{display:flex;gap:6px;margin-top:8px}.summaryactions button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:white;cursor:pointer}.summaryactions .finish{color:var(--good);font-weight:700}.summaryactions .edit{color:#2563eb;font-weight:700}.summarytotal{padding:10px 0 0;border-top:2px solid var(--line);margin-top:8px;font-weight:750;text-align:right}
-/* V5.6.3: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
+/* V5.6.4: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
 #list { display:block !important; width:100%; }
 #list > .entry {
   display:flex !important;
@@ -40,7 +40,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 }
 
 
-/* V5.6.3 – QR transfer dialogs */
+/* V5.6.4 – QR transfer dialogs */
 .transfer-overlay{
  position:fixed !important; inset:0 !important; z-index:99999 !important;
  background:rgba(0,0,0,.48) !important; padding:18px !important;
@@ -303,7 +303,7 @@ async function openQRScanner(){
        if(!payload||payload.app!=="Zahlungsplaner"||!Array.isArray(payload.entries)) throw new Error("Payload hat nicht das erwartete Format");
        pendingTransfer=payload.entries;
        qrDebug($("qrDebug").textContent+"\n\n4. Importdaten vorbereitet ✓");
-       $("qrScanStatus").innerHTML='QR-Code erfolgreich gelesen. <button onclick="openScannedPreview()" style="margin-left:6px">Vorschau öffnen</button>';
+       $("qrScanStatus").innerHTML='QR-Code erfolgreich gelesen: '+pendingTransfer.length+' Datensätze. <button onclick="importScannedData()" style="margin-left:6px">Jetzt importieren</button>';
      }catch(e){
        qrScanLocked=false;
        qrDebug($("qrDebug").textContent+"\n\nFEHLER: "+(e&&e.message?e.message:String(e)));
@@ -315,6 +315,27 @@ async function openQRScanner(){
    qrDebug("KAMERA-FEHLER: "+(e&&e.message?e.message:String(e)));
    $("qrScanStatus").textContent="Kamera konnte nicht geöffnet werden. Bitte Kamerazugriff erlauben.";
  }
+}
+async function importScannedData(){
+ if(!pendingTransfer||!pendingTransfer.length){alert("Es sind keine Importdaten vorhanden.");return}
+ const data=pendingTransfer.map(x=>({...x}));
+ let added=0,skipped=0;
+ for(const x of data){
+   const duplicate=store.entries.some(y=>y.party===x.party && +y.amount===+x.amount && y.due===x.due && y.type===x.type);
+   if(duplicate){skipped++;continue}
+   store.entries.push({...x,id:crypto.randomUUID()}); added++;
+ }
+ save();
+ if(qrScanner){
+   const scannerToStop=qrScanner; qrScanner=null;
+   try{await scannerToStop.stop()}catch(e){}
+   try{scannerToStop.clear()}catch(e){}
+ }
+ $("qrScannerModal").style.display="none";
+ pendingTransfer=null;
+ selectedIds.clear();
+ renderAll();
+ alert(added+" Datensätze importiert"+(skipped?", "+skipped+" Duplikate übersprungen":"")+".");
 }
 async function openScannedPreview(){
  if(!pendingTransfer||!pendingTransfer.length)return;
