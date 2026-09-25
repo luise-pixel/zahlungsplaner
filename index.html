@@ -30,7 +30,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 .fab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:white;font-size:32px;box-shadow:0 7px 25px #0003;cursor:pointer}.note{font-size:12px;color:var(--muted);margin-top:12px}
 @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:1fr}.amount{text-align:left}.day{min-height:90px;padding:4px}.calevent{font-size:9px}.weekday{font-size:10px;padding:6px 2px}}
 .summarybtn{font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}.summarybtn:hover{border-color:var(--accent);transform:translateY(-1px)}.cardhint{display:block;margin-top:8px;font-size:11px;color:var(--muted)}.summaryrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.summaryrow:first-child{border-top:0}.summaryrow h3{margin:0 0 4px;font-size:15px}.summaryrow .amount{white-space:nowrap}.summaryactions{display:flex;gap:6px;margin-top:8px}.summaryactions button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:white;cursor:pointer}.summaryactions .finish{color:var(--good);font-weight:700}.summaryactions .edit{color:#2563eb;font-weight:700}.summarytotal{padding:10px 0 0;border-top:2px solid var(--line);margin-top:8px;font-weight:750;text-align:right}
-/* V5.6.4: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
+/* V5.7.2: Rechnungen/Forderungen in der unteren Übersicht immer untereinander */
 #list { display:block !important; width:100%; }
 #list > .entry {
   display:flex !important;
@@ -40,7 +40,7 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 }
 
 
-/* V5.6.4 – QR transfer dialogs */
+/* V5.7.2 – QR transfer dialogs */
 .transfer-overlay{
  position:fixed !important; inset:0 !important; z-index:99999 !important;
  background:rgba(0,0,0,.48) !important; padding:18px !important;
@@ -57,6 +57,56 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 #qrCanvasWrap canvas,#qrCanvasWrap img{max-width:100% !important;height:auto !important}
 #qr-reader{width:100% !important;margin-top:12px}
 
+
+/* V5.7.2 – mobile Auswahlleiste */
+.selection-dock{
+ position:fixed !important;
+ left:50% !important;
+ bottom:16px !important;
+ transform:translateX(-50%) !important;
+ width:min(94vw,680px) !important;
+ z-index:9000 !important;
+ background:rgba(255,255,255,.97) !important;
+ border:1px solid var(--line) !important;
+ border-radius:18px !important;
+ box-shadow:0 12px 38px rgba(0,0,0,.18) !important;
+ padding:10px 12px 12px !important;
+ backdrop-filter:blur(12px);
+}
+.selection-dock-head{
+ display:flex;align-items:center;justify-content:space-between;
+ padding:0 2px 8px 4px;
+}
+.selection-close{
+ width:30px !important;height:30px !important;padding:0 !important;
+ border-radius:50% !important;background:#fff !important;
+}
+.selection-actions{
+ display:flex !important;
+ gap:8px !important;
+ overflow-x:auto !important;
+ overscroll-behavior-x:contain;
+ -webkit-overflow-scrolling:touch;
+ scrollbar-width:none;
+ padding:2px 2px 4px;
+}
+.selection-actions::-webkit-scrollbar{display:none}
+.selection-action{
+ flex:0 0 auto !important;
+ min-width:155px !important;
+ min-height:44px !important;
+ border-radius:12px !important;
+ background:#fff !important;
+ border:1px solid var(--line) !important;
+ color:var(--text) !important;
+ display:flex !important;
+ align-items:center !important;
+ justify-content:center !important;
+ gap:7px !important;
+}
+.selection-action span{font-size:18px}
+body{padding-bottom:100px}
+
 </style></head>
 <body>
 <header><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><h1>Mein Zahlungsplaner</h1><p>Rechnungen, Forderungen und wiederkehrende Zahlungen im Blick behalten.</p></div><button onclick="refreshApp()" title="Aktualisieren" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--accent);font-size:23px;cursor:pointer">↻</button></div></header>
@@ -71,8 +121,8 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 
 <div class="nav">
 <button class="active" data-view="payments" onclick="showView(this)">Rechnungen & Forderungen</button>
-<button data-view="calendar" onclick="showView(this)">Kalender</button>
 <button data-view="recurring" onclick="showView(this)">Wiederkehrende Zahlungen</button>
+<button data-view="calendar" onclick="showView(this)">Kalender</button>
 </div>
 
 <section id="payments" class="view active">
@@ -81,10 +131,15 @@ form{padding:20px}form h2{margin-top:0}.grid{display:grid;grid-template-columns:
 <h2 style="margin-top:0">Fälligkeitsübersicht</h2>
 <div id="attentionList"></div>
 </div>
-<div id="selectTools" style="display:none;margin:0 0 10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff;gap:8px;align-items:center;flex-wrap:wrap">
-<strong id="selectedCount">0 ausgewählt</strong>
-<button class="secondary" onclick="clearSelection()">Auswahl aufheben</button>
-<button class="secondary" onclick="showTransferQR()">Auswahl übertragen</button>
+<div id="selectTools" class="selection-dock" style="display:none">
+  <div class="selection-dock-head">
+    <strong id="selectedCount">0 ausgewählt</strong>
+    <button class="selection-close" onclick="clearSelection()" title="Auswahl schließen">×</button>
+  </div>
+  <div class="selection-actions">
+    <button class="selection-action" onclick="showTransferQR()"><span>▣</span>Auswahl übertragen</button>
+    <button class="selection-action" onclick="clearSelection()"><span>○</span>Auswahl aufheben</button>
+  </div>
 </div>
 <div class="panel"><div class="tabs"><button class="active" data-filter="open" onclick="setFilter(this)">Offen</button><button data-filter="late" onclick="setFilter(this)">Überfällig</button><button data-filter="done" onclick="setFilter(this)">Erledigt</button><button data-filter="all" onclick="setFilter(this)">Alle</button></div><div id="list"></div></div>
 </section>
@@ -161,7 +216,7 @@ function renderSummary(){
  renderAttention();
 }
 function attentionRow(x,label,cls){
- return `<div class="entry"><div style="display:flex;align-items:flex-start"><input type="checkbox" style="margin:4px 10px 0 0;width:18px;height:18px" ${selectedIds.has(x.id)?"checked":""} onchange="selectEntry('${x.id}',this.checked)"><div><h3>${esc(x.party)}</h3><div><span class="badge ${cls}">${label}</span><span class="badge">${x.type==="pay"?"Zahlen":"Bekommen"}</span></div><div class="meta">Fällig: ${fmt(x.due)}${x.note?" · "+esc(x.note):""}</div></div></div><div class="amount ${x.type==="get"?"good":""}">${x.type==="get"?"+":"−"} ${money(x.amount)}</div></div>`;
+ return `<div class="entry"><div style="display:flex;align-items:flex-start"><input type="checkbox" style="margin:4px 10px 0 0;width:18px;height:18px" ${selectedIds.has(x.id)?"checked":""} onchange="selectEntry('${x.id}',this.checked)"><div><h3>${esc(x.party)}</h3><div><span class="badge ${cls}">${label}</span><span class="badge">${x.type==="pay"?"Zahlen":"Bekommen"}</span></div><div class="meta">Fällig: ${fmt(x.due)}${x.note?" · "+esc(x.note):""}</div><div class="actions"><button onclick="toggleDone('${x.id}')">✓ Erledigt</button><button onclick="editEntry('${x.id}')">Bearbeiten</button><button onclick="removeEntry('${x.id}')">Löschen</button></div></div></div><div class="amount ${x.type==="get"?"good":""}">${x.type==="get"?"+":"−"} ${money(x.amount)}</div></div>`;
 }
 function renderAttention(){
  let open=store.entries.filter(x=>x.status!=="done");
